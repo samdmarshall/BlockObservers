@@ -18,23 +18,24 @@
 @implementation MyClass
 @end
 
-#define customNameKey "customName"
-
 int main(int argc, const char * argv[]) {
 	@autoreleasepool {
-		id getter = ^ObserverBlock(id self, ...){
-			printf("hello world, property get\n");
-			return nil;
+		
+		ObserverGetBlock(getter, NSString*){
+			printf("testing property get\n");
+			return @"testing!";
 		};
 		
-		id setter = ^ObserverBlock(id self, ...){
-			printf("hello world, property set\n");
-			return nil;
+		ObserverSetBlock(setter, NSString*){
+			printf("testing property set\n");
 		};
 		
 		MyClass *testClass = [MyClass new];
-		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, customNameKey, testClass);
+		BOOL result = SDMRegisterCallbacksForKeyInInstance((BlockPointer)getter, (BlockPointer)setter, "customName", testClass);
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
+		if (result) {
+			//SDMRemoveCallbackForKeyInInstance("customName", testClass);
+		}
 		NSLog(@"%@",testClass.customName);
 		MyClass *newTest = [MyClass new];
 		newTest.customName = @"bye!";

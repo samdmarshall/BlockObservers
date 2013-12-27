@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22657B4C186E15520094782E /* SDMRuntimeBase.s in Sources */ = {isa = PBXBuildFile; fileRef = 22657B4B186E15520094782E /* SDMRuntimeBase.s */; };
 		22A91739186CD77E00087D0A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22A91738186CD77E00087D0A /* Foundation.framework */; };
 		22A9173C186CD77E00087D0A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 22A9173B186CD77E00087D0A /* main.m */; };
 		22A91740186CD77E00087D0A /* KVO_Test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 22A9173F186CD77E00087D0A /* KVO_Test.1 */; };
@@ -28,6 +29,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		22657B4B186E15520094782E /* SDMRuntimeBase.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = SDMRuntimeBase.s; sourceTree = "<group>"; };
 		22A91735186CD77E00087D0A /* KVO-Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "KVO-Test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22A91738186CD77E00087D0A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		22A9173B186CD77E00087D0A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 		22A9174E186CD79600087D0A /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
+				22657B4B186E15520094782E /* SDMRuntimeBase.s */,
 				22A9174F186CD79600087D0A /* SDMRuntimeBase.c */,
 				22A91750186CD79600087D0A /* SDMRuntimeBase.h */,
 			);
@@ -176,6 +179,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22A91752186CD79600087D0A /* SDMRuntimeBase.c in Sources */,
+				22657B4C186E15520094782E /* SDMRuntimeBase.s in Sources */,
 				22A9173C186CD77E00087D0A /* main.m in Sources */,
 				22A91751186CD79600087D0A /* SDMHeader.c in Sources */,
 			);
@@ -289,6 +293,7 @@
 				22A91745186CD77E00087D0A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

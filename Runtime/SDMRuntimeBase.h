@@ -14,7 +14,10 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-typedef id(^ObserverBlock)(id self, ...);
+#define ObserverGetBlock(ObserverName, ReturnType) ReturnType (^ObserverName)() = ^ReturnType()
+#define ObserverSetBlock(ObserverName, ArgumentType) void (^ObserverName)(ArgumentType) = ^(ArgumentType param)
+
+typedef void (^BlockPointer)();
 
 struct ObserverArray {
 	struct MethodNames *array;
@@ -27,7 +30,9 @@ struct MethodNames {
 	char *setName;
 };
 
-BOOL SDMRegisterCallbacksForKeyInInstance(ObserverBlock getBlock, ObserverBlock setBlock, char *keyName, id instance);
+extern IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd);
+
+BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
 void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance);
 
 #endif
