@@ -16,7 +16,13 @@
 
 typedef id(^ObserverBlock)(id self, ...);
 
+struct ObserverArray {
+	struct MethodNames *array;
+	uint32_t count;
+};
+
 struct MethodNames {
+	char *keyName;
 	char *getName;
 	char *setName;
 };

@@ -35,10 +35,9 @@ int main(int argc, const char * argv[]) {
 		MyClass *testClass = [MyClass new];
 		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, customNameKey, testClass);
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
-		if (result) {
-			SDMRemoveCallbackForKeyInInstance(customNameKey, testClass);
-		}
 		NSLog(@"%@",testClass.customName);
+		MyClass *newTest = [MyClass new];
+		newTest.customName = @"bye!";
 	}
     return 0;
 }
