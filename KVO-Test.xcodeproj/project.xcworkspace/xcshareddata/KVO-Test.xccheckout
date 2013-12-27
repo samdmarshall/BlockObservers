@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>60BA3F6F-DEE5-4E1C-A0CD-0D6956F5973D</string>
+	<key>IDESourceControlProjectName</key>
+	<string>KVO-Test</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>2CA6C8BE-019E-424E-A957-9D7413EE97E3</key>
+		<string>ssh://github.com/samdmarshall/KVO-Test.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>KVO-Test.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>2CA6C8BE-019E-424E-A957-9D7413EE97E3</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/samdmarshall/KVO-Test.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>2CA6C8BE-019E-424E-A957-9D7413EE97E3</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2CA6C8BE-019E-424E-A957-9D7413EE97E3</string>
+			<key>IDESourceControlWCCName</key>
+			<string>KVO-Test</string>
+		</dict>
+	</array>
+</dict>
+</plist>
