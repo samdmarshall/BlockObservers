@@ -126,9 +126,40 @@ char* SDMGenerateMethodSignature(Method method) {
 static IMP whichIMP = NULL;
 
 IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd) {
-	
-	printf("Firing notifications for %08x - %08x\n", self, _cmd);
-	return whichIMP;
+	char *originalSelector = (char*)sel_getName(_cmd);
+	BOOL isGetter = FALSE;
+	BOOL isSetter = FALSE;
+	IMP originalImplementation;
+	Method originalMethod;
+	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, self);
+	if (observers) {
+		printf("Firing notifications for %08x - %s\n", self, originalSelector);
+		uint32_t observableCount = observers->count;
+		uint32_t index;
+		for (index = 0x0; index < observableCount; index++) {
+			char *observableGetter = observers->array[index].getName;
+			char *observableSetter = observers->array[index].setName;
+			if (strncmp(originalSelector, observableGetter, strlen(originalSelector)) == 0x0) {
+				isGetter = TRUE;
+				break;
+			}
+			if (strncmp(originalSelector, observableSetter, strlen(originalSelector)) == 0x0) {
+				isSetter = TRUE;
+				break;
+			}
+		}
+		if (isGetter) {
+			originalMethod = (Method)objc_getAssociatedObject(self, observers->array[index].getName);
+		}
+		
+		if (isSetter) {
+			originalMethod = (Method)objc_getAssociatedObject(self, observers->array[index].setName);
+		}
+	} else {
+		originalMethod = class_getInstanceMethod(object_getClass(self), _cmd);
+	}
+	originalImplementation = method_getImplementation(originalMethod);	
+	return originalImplementation;
 }
 
 #pragma mark -
@@ -217,14 +248,19 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 				SEL originalGet = nil;
 				struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance);
 				if (observers && self == instance) {
-					Method originalGetMethod = (Method)objc_getAssociatedObject(self, observers->array[0].setName);
+					SEL realGetSelector = sel_registerName(observers->array[0].getName);
+					Method originalGetMethod = class_getInstanceMethod(class, realGetSelector);
+
+					//Method originalGetMethod = (Method)objc_getAssociatedObject(self, observers->array[0].getName);
 					originalGet = method_getName(originalGetMethod);
 					getObserve();
 				}
 				return ((id (*)(id, SEL))SDMGenericGetSetInterceptor)(self, originalGet);
 			};
-			
-			IMP getSelector = imp_implementationWithBlock(getSelectorBlock);
+			 
+			SEL originalGet = method_getName(resolveGetter);
+			IMP getSelector = (IMP)((id (*)(id, SEL))SDMGenericGetSetInterceptor)(instance, originalGet);
+			//IMP getSelector = imp_implementationWithBlock(getSelectorBlock);
 			
 			BOOL addObserverGetter = class_addMethod(class, observerGetSelector, getSelector, getMethodSignature);
 			if (addObserverGetter) {
@@ -232,7 +268,7 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 				Method observerGetter = calloc(0x1, sizeof(MethodStruct));
 				memcpy(observerGetter, getter, sizeof(MethodStruct));
 				method_exchangeImplementations(resolveGetter, observerGetter);
-				objc_setAssociatedObject(instance, originalMethods->getName, PtrCast(observerGetter,id), OBJC_ASSOCIATION_ASSIGN);
+				objc_setAssociatedObject(instance, originalMethods->getName, PtrCast(getter,id), OBJC_ASSOCIATION_ASSIGN);
 			}
 			registerStatus = addObserverGetter;
 			free(observerGetterName);
