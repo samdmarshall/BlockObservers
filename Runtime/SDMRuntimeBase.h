@@ -10,6 +10,7 @@
 #define Daodan_SDMRuntimeBase_h
 
 #include "SDMHeader.h"
+#include <ctype.h>
 #include <objc/objc.h>
 #include <objc/message.h>
 #include <objc/runtime.h>
@@ -30,9 +31,10 @@ struct MethodNames {
 	char *setName;
 };
 
-extern IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd);
+// SDM: always use this to hide the block pointer casts.
+#define SDMRegisterCallbacksForKeyInInstance(getObserve, setObserve, keyName, instance) SDMRegisterCallbacksForKeyInInstanceInternal((BlockPointer)getObserve, (BlockPointer)setObserve, keyName, instance)
+BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
 
-BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
 void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance);
 
 #endif
