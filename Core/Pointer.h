@@ -27,4 +27,6 @@ typedef uintptr_t* (*FunctionPointer)();
 #define PtrAdd(ptr, add) (Ptr(ptr) + (uint64_t)add)
 #define PtrSub(ptr, sub) (Ptr(ptr) - (uint64_t)sub)
 
+#define PtrDeref(type, pointer) (*((type) *)(pointer))
+
 #endif
