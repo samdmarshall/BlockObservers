@@ -532,7 +532,12 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 				Method observerGetterMethod = PtrCast(originalGetterValue,Method);
 				if (observerGetterMethod) {
 					char *originalGetterName = SDMGenerateGetterName(keyName);
-					SEL originalGetSelector = sel_registerName(originalGetterName);
+					SEL originalGetSelector;
+					if (strncmp(originalGetterName, originalMethods->getName, strlen(originalMethods->getName)) == 0x0) {
+						originalGetSelector = sel_registerName(originalGetterName);
+					} else {
+						originalGetSelector = sel_registerName(originalMethods->getName);
+					}
 					Method originalGetter = class_getInstanceMethod(class, originalGetSelector);
 					
 					method_exchangeImplementations(observerGetterMethod, originalGetter);
@@ -544,7 +549,12 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 				Method observerSetterMethod = PtrCast(originalSetterValue,Method);
 				if (observerSetterMethod) {
 					char *originalSetterName = SDMGenerateSetterName(keyName);
-					SEL originalSetSelector = sel_registerName(originalSetterName);
+					SEL originalSetSelector;
+					if (strncmp(originalSetterName, originalMethods->setName, strlen(originalMethods->setName)) == 0x0) {
+						originalSetSelector = sel_registerName(originalSetterName);
+					} else {
+						originalSetSelector = sel_registerName(originalMethods->setName);
+					}
 					Method originalSetter = class_getInstanceMethod(class, originalSetSelector);
 					
 					method_exchangeImplementations(observerSetterMethod, originalSetter);

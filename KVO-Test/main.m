@@ -11,7 +11,7 @@
 
 @interface MyClass : NSObject
 @property (nonatomic, strong) NSString *customName;
-@property (nonatomic, readwrite) int customInt;
+@property (getter = customIntWithNewGet, readwrite) int customInt;
 @property (nonatomic, readonly) float customFloat;
 @end
 
@@ -37,7 +37,7 @@ int main(int argc, const char * argv[]) {
 		if (result) {
 			SDMRemoveCallbackForKeyInInstance("customInt", testClass);
 		}
-		NSLog(@"%i",testClass.customInt);
+		NSLog(@"%i",testClass.customIntWithNewGet);
 		MyClass *newTest = [MyClass new];
 		newTest.customName = @"bye!";
 	}
