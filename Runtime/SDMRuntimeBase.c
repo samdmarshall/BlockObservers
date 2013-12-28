@@ -79,19 +79,19 @@ extern void SDMGenericGetSetInterceptor(void);
 #pragma mark Private Calls
 
 BOOL SDMCanRegisterForIvarInClass(char *ivarName, Class class) {
-	BOOL registerStatus = FALSE;
+	BOOL registerStatus = NO;
 	Ivar ivar = class_getInstanceVariable(class, ivarName);
 	if (ivar) {
-		registerStatus = TRUE;
+		registerStatus = YES;
 	}
 	return registerStatus;
 }
 
 BOOL SDMCanRegisterForPropertyInClass(char *propertyName, Class class) {
-	BOOL registerStatus = FALSE;
+	BOOL registerStatus = NO;
 	objc_property_t property = class_getProperty(class, propertyName);
 	if (property) {
-		registerStatus = TRUE;
+		registerStatus = YES;
 	}
 	return registerStatus;
 }
@@ -150,9 +150,9 @@ char* SDMGenerateMethodSignature(Method method) {
 
 IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd) {
 	char *originalSelector = (char*)sel_getName(_cmd);
-	BOOL observedSelector = FALSE;
-	BOOL isGetter = FALSE;
-	BOOL isSetter = FALSE;
+	BOOL observedSelector = NO;
+	BOOL isGetter = NO;
+	BOOL isSetter = NO;
 	IMP originalImplementation;
 	Method originalMethod;
 	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, self);
@@ -163,11 +163,11 @@ IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd) {
 			char *observableGetter = observers->array[index].getName;
 			char *observableSetter = observers->array[index].setName;
 			if (strncmp(originalSelector, observableGetter, strlen(originalSelector)) == 0x0) {
-				observedSelector = isGetter = TRUE;
+				observedSelector = isGetter = YES;
 				break;
 			}
 			if (strncmp(originalSelector, observableSetter, strlen(originalSelector)) == 0x0) {
-				observedSelector = isSetter = TRUE;
+				observedSelector = isSetter = YES;
 				break;
 			}
 		}
@@ -190,9 +190,9 @@ IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd) {
 #pragma mark Public Calls
 
 BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance) {
-	BOOL registerStatus = FALSE;
-	BOOL registerGetStatus = FALSE;
-	BOOL registerSetStatus = FALSE;
+	BOOL registerStatus = NO;
+	BOOL registerGetStatus = NO;
+	BOOL registerSetStatus = NO;
 	if ((getObserve && setObserve) && instance) {
 		__block char *getName = 0x0;
 		__block char *setName = 0x0;
@@ -236,12 +236,12 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 		
 		id associatedObject = objc_getAssociatedObject(instance, instance);
 		if (associatedObject) {
-			BOOL existingObserverForKey = FALSE;
+			BOOL existingObserverForKey = NO;
 			struct ObserverArray *existingObservers = PtrCast(associatedObject, struct ObserverArray*);
 			for (uint32_t i = 0x0; i < existingObservers->count; i++) {
 				char *key = existingObservers->array[i].keyName;
 				if (strncmp(keyName, key, strlen(keyName)) == 0x0) {
-					existingObserverForKey = TRUE;
+					existingObserverForKey = YES;
 					// SDM: we have an existing observer registered.
 					break;
 				}
@@ -511,7 +511,7 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 			free(observerSetterName);
 		}
 		if (registerGetStatus) {
-			registerStatus = TRUE;
+			registerStatus = YES;
 		}
 	}
 	return registerStatus;

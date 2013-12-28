@@ -9,7 +9,7 @@
 #ifndef Daodan_SDMRuntimeBase_h
 #define Daodan_SDMRuntimeBase_h
 
-#include "SDMHeader.h"
+#include "Core.h"
 #include <ctype.h>
 #include <objc/objc.h>
 #include <objc/message.h>

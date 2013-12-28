@@ -11,7 +11,6 @@
 
 #include "SDMObjcLexer.h"
 
-
 #define kObjcTypeEncodingCount 0x15
 
 static char* ObjcTypeEncoding[kObjcTypeEncodingCount] = {

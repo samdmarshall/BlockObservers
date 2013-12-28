@@ -15,10 +15,17 @@
 #define ATR_FUNC(name) __attribute__ ((ifunc(name)))
 
 #pragma mark -
-#pragma mark Includes
+#pragma mark System Incues
+#include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#pragma mark -
+#pragma mark Core Includes
 #include "Pointer.h"
 #include "Range.h"
 #include "Number.h"
-#include "Logging.h"
 
 #endif

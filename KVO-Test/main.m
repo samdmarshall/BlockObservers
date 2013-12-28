@@ -11,7 +11,7 @@
 
 @interface MyClass : NSObject
 @property (nonatomic, strong) NSString *customName;
-@property (getter = customIntWithNewGet, readwrite) int customInt;
+@property (nonatomic, readwrite) int customInt;
 @property (nonatomic, readonly) float customFloat;
 @end
 
@@ -21,22 +21,23 @@
 int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		
-		ObserverGetBlock(getter, NSString*){
+		ObserverGetBlock(getter, int){
 			printf("testing property get\n");
-			return @"testing!";
+			return 2;
 		};
 		
-		ObserverSetBlock(setter, NSString*){
+		ObserverSetBlock(setter, int){
 			printf("testing property set\n");
 		};
 		
 		MyClass *testClass = [MyClass new];
-		BOOL result = SDMRegisterCallbacksForKeyInInstance((BlockPointer)getter, (BlockPointer)setter, "customName", testClass);
+		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, "customInt", testClass);
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
+		testClass.customInt = 5;
 		if (result) {
-			//SDMRemoveCallbackForKeyInInstance("customName", testClass);
+			SDMRemoveCallbackForKeyInInstance("customInt", testClass);
 		}
-		NSLog(@"%@",testClass.customName);
+		NSLog(@"%i",testClass.customInt);
 		MyClass *newTest = [MyClass new];
 		newTest.customName = @"bye!";
 	}

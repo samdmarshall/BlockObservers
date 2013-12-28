@@ -9,7 +9,7 @@
 #ifndef Daodan_SDMObjcLexer_h
 #define Daodan_SDMObjcLexer_h
 
-#include "SDMHeader.h"
+#include "Core.h"
 
 #define kObjcCharEncoding "c"
 #define kObjcIntEncoding "i"
