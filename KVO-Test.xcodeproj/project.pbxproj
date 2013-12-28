@@ -13,6 +13,7 @@
 		22A91740186CD77E00087D0A /* KVO_Test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 22A9173F186CD77E00087D0A /* KVO_Test.1 */; };
 		22A91751186CD79600087D0A /* SDMHeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 22A9174C186CD79600087D0A /* SDMHeader.c */; };
 		22A91752186CD79600087D0A /* SDMRuntimeBase.c in Sources */ = {isa = PBXBuildFile; fileRef = 22A9174F186CD79600087D0A /* SDMRuntimeBase.c */; };
+		22E18F4F186E521E00E3FCF0 /* SDMObjcLexer.c in Sources */ = {isa = PBXBuildFile; fileRef = 22E18F49186E521E00E3FCF0 /* SDMObjcLexer.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +45,8 @@
 		22A9174D186CD79600087D0A /* SDMHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDMHeader.h; sourceTree = "<group>"; };
 		22A9174F186CD79600087D0A /* SDMRuntimeBase.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDMRuntimeBase.c; sourceTree = "<group>"; };
 		22A91750186CD79600087D0A /* SDMRuntimeBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDMRuntimeBase.h; sourceTree = "<group>"; };
+		22E18F49186E521E00E3FCF0 /* SDMObjcLexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDMObjcLexer.c; sourceTree = "<group>"; };
+		22E18F4A186E521E00E3FCF0 /* SDMObjcLexer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDMObjcLexer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +123,8 @@
 		22A9174E186CD79600087D0A /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
+				22E18F49186E521E00E3FCF0 /* SDMObjcLexer.c */,
+				22E18F4A186E521E00E3FCF0 /* SDMObjcLexer.h */,
 				22657B4B186E15520094782E /* SDMRuntimeBase.s */,
 				22A9174F186CD79600087D0A /* SDMRuntimeBase.c */,
 				22A91750186CD79600087D0A /* SDMRuntimeBase.h */,
@@ -178,6 +183,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22E18F4F186E521E00E3FCF0 /* SDMObjcLexer.c in Sources */,
 				22A91752186CD79600087D0A /* SDMRuntimeBase.c in Sources */,
 				22657B4C186E15520094782E /* SDMRuntimeBase.s in Sources */,
 				22A9173C186CD77E00087D0A /* main.m in Sources */,

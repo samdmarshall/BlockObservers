@@ -20,6 +20,24 @@
 
 typedef void (^BlockPointer)();
 
+typedef char (^SDMcharBlock)(id self);
+typedef int (^SDMintBlock)(id self);
+typedef short (^SDMshortBlock)(id self);
+typedef long (^SDMlongBlock)(id self);
+typedef long long (^SDMlonglongBlock)(id self);
+typedef unsigned char (^SDMunsignedcharBlock)(id self);
+typedef unsigned int (^SDMunsignedintBlock)(id self);
+typedef unsigned short (^SDMunsignedshortBlock)(id self);
+typedef unsigned long (^SDMunsignedlongBlock)(id self);
+typedef unsigned long long (^SDMunsignedlonglongBlock)(id self);
+typedef float (^SDMfloatBlock)(id self);
+typedef double (^SDMdoubleBlock)(id self);
+typedef bool (^SDMboolBlock)(id self);
+typedef char* (^SDMstringBlock)(id self);
+typedef id (^SDMidBlock)(id self);
+typedef Class (^SDMclassBlock)(id self);
+typedef SEL (^SDMselBlock)(id self);
+
 struct ObserverArray {
 	struct MethodNames *array;
 	uint32_t count;

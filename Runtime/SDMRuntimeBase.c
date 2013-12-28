@@ -10,14 +10,61 @@
 #define Daodan_SDMRuntimeBase_c
 
 #include "SDMRuntimeBase.h"
+#include "SDMObjcLexer.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 typedef struct objc_method MethodStruct;
 #pragma clang diagnostic pop
 
-#define SDMCreateGetter(ReturnType, obj, selector) ((ReturnType (*)(id, SEL))SDMGenericGetSetInterceptor)(obj, selector);
-#define SDMCreateSetter(ReturnType, obj, selector, setValue) ((void (*)(id, SEL, ReturnType))SDMGenericGetSetInterceptor)(obj, selector, setValue);
+#define SDMCreateGetter(ReturnType, obj, selector) ((ReturnType (*)(id, SEL))SDMGenericGetSetInterceptor)(obj, selector)
+#define SDMCreateSetter(ReturnType, obj, selector, setValue) ((void (*)(id, SEL, ReturnType))SDMGenericGetSetInterceptor)(obj, selector, setValue)
+
+#define SDMObserverGetterBlock(BlockType, ReturnType, getObserve, instance, keyName) \
+BlockType getSelectorBlock = ^ReturnType(id self){ \
+	SEL originalGet = nil; \
+	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
+	if (observers && self == instance) { \
+		for (uint32_t i = 0x0; i < observers->count; i++) { \
+			char *key = observers->array[i].keyName; \
+			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
+				SEL realGetSelector = sel_registerName(observers->array[i].getName); \
+				Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+				originalGet = method_getName(originalGetMethod); \
+				char *originalGetName = (char*)sel_getName(originalGet); \
+				if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) { \
+					return (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
+				} \
+			} \
+		} \
+	} \
+	return 0x0; \
+}
+
+#define SDMObserverSetterBlock(ReturnType, setObserve, instance, keyName) \
+^(id self, ReturnType arg){ \
+	SEL originalSet = nil; \
+	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
+	if (observers && self == instance) { \
+		for (uint32_t i = 0x0; i < observers->count; i++) { \
+			char *key = observers->array[i].keyName; \
+			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
+				SEL realSetSelector = sel_registerName(observers->array[i].setName); \
+				Method originalSetMethod = class_getInstanceMethod(class, realSetSelector); \
+				originalSet = method_getName(originalSetMethod); \
+				char *originalGetName = (char*)sel_getName(originalSet); \
+				if (strncmp(observers->array[i].setName, originalGetName, strlen(observers->array[i].setName)) == 0x0) { \
+					setObserve(); \
+					SDMCreateSetter(ReturnType, self, originalSet, arg); \
+					break; \
+				} else { \
+					break; \
+				} \
+			} \
+		} \
+	} \
+	return nil; \
+}
 
 BOOL SDMCanRegisterForIvarInClass(char *ivarName, Class class);
 BOOL SDMCanRegisterForPropertyInClass(char *propertyName, Class class);
@@ -216,38 +263,115 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 		if (originalMethods->getName) {
 			SEL realGetSelector = sel_registerName(originalMethods->getName);
 			Method resolveGetter = class_getInstanceMethod(class, realGetSelector);
-			
-			//__block id originalGetter = imp_getBlock(method_getImplementation(resolveGetter));
-			
+						
 			char *observerGetterName = SDMGenerateObserver(originalMethods->getName);
 			SEL observerGetSelector = sel_registerName(observerGetterName);
 			char *getMethodSignature = SDMGenerateMethodSignature(resolveGetter);
 			
-			id getSelectorBlock = (void*)^id(id self, ...){
-				SEL originalGet = nil;
-				struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance);
-				if (observers && self == instance) {
-					for (uint32_t i = 0x0; i < observers->count; i++) {
-						char *key = observers->array[i].keyName;
-						if (strncmp(keyName, key, strlen(keyName)) == 0x0) {
-							SEL realGetSelector = sel_registerName(observers->array[i].getName);
-							Method originalGetMethod = class_getInstanceMethod(class, realGetSelector);
-							originalGet = method_getName(originalGetMethod);
-							char *originalGetName = (char*)sel_getName(originalGet);
-							if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) {
-								getObserve();
-								id value = ((id (*)(id, SEL))SDMGenericGetSetInterceptor)(self, originalGet);
-								return value;
-							} else {
-								break;
-							}
-						}
-					}
-				}
-				return nil;
-			};
-			 
-			IMP getSelector = imp_implementationWithBlock(getSelectorBlock);
+			IMP getSelector;
+			struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveGetter),char*)); \
+			switch (decoded->token[0].typeClass) {
+				case ObjcCharEncoding: {
+					SDMObserverGetterBlock(SDMcharBlock, char, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcIntEncoding: {
+					SDMObserverGetterBlock(SDMintBlock, int, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcShortEncoding: {
+					SDMObserverGetterBlock(SDMshortBlock,short, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcLongEncoding: {
+					SDMObserverGetterBlock(SDMlongBlock, long, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcLLongEncoding: {
+					SDMObserverGetterBlock(SDMlonglongBlock, long long, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcUCharEncoding: {
+					SDMObserverGetterBlock(SDMunsignedcharBlock, unsigned char, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcUIntEncoding: {
+					SDMObserverGetterBlock(SDMunsignedintBlock, unsigned int, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcUShortEncoding: {
+					SDMObserverGetterBlock(SDMunsignedshortBlock, unsigned short, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcULongEncoding: {
+					SDMObserverGetterBlock(SDMunsignedlongBlock, unsigned long, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcULLongEncoding: {
+					SDMObserverGetterBlock(SDMunsignedlonglongBlock, unsigned long long, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcFloatEncoding: {
+					SDMObserverGetterBlock(SDMfloatBlock, float, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcDoubleEncoding: {
+					SDMObserverGetterBlock(SDMdoubleBlock, double, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcBoolEncoding: {
+					SDMObserverGetterBlock(SDMboolBlock, bool, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcStringEncoding: {
+					SDMObserverGetterBlock(SDMstringBlock, char*, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcIdEncoding: {
+					SDMObserverGetterBlock(SDMidBlock, id, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcClassEncoding: {
+					SDMObserverGetterBlock(SDMclassBlock, Class, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcSelEncoding: {
+					SDMObserverGetterBlock(SDMselBlock, SEL, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
+				};
+				case ObjcBitEncoding: {
+					
+				};
+				case ObjcPointerEncoding: {
+					
+				};
+				case ObjcStructEncoding: {
+					break;
+				};
+				case ObjcArrayEncoding: {
+					break;
+				};
+				default: {
+					break;
+				};
+			}
 			
 			BOOL addObserverGetter = class_addMethod(class, observerGetSelector, getSelector, getMethodSignature);
 			if (addObserverGetter) {
@@ -265,39 +389,104 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 		if (originalMethods->setName) {
 			SEL realSetSelector = sel_registerName(originalMethods->setName);
 			Method resolveSetter = class_getInstanceMethod(class, realSetSelector);
-			
-			//__block id originalSetter = imp_getBlock(method_getImplementation(resolveSetter));
-			
+						
 			char *observerSetterName = SDMGenerateObserver(originalMethods->setName);
 			SEL observerSetSelector = sel_registerName(observerSetterName);
 			char *setMethodSignature = SDMGenerateMethodSignature(resolveSetter);
 			
-			
-			
-			id setSelectorBlock = (void*)^id(id self, id arg){
-				SEL originalSet = nil;
-				struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance);
-				if (observers && self == instance) {
-					for (uint32_t i = 0x0; i < observers->count; i++) {
-						char *key = observers->array[i].keyName;
-						if (strncmp(keyName, key, strlen(keyName)) == 0x0) {
-							SEL realSetSelector = sel_registerName(observers->array[i].setName);
-							Method originalSetMethod = class_getInstanceMethod(class, realSetSelector);
-							originalSet = method_getName(originalSetMethod);
-							char *originalGetName = (char*)sel_getName(originalSet);
-							if (strncmp(observers->array[i].setName, originalGetName, strlen(observers->array[i].setName)) == 0x0) {
-								setObserve();
-								((void (*)(id, SEL, id))SDMGenericGetSetInterceptor)(self, originalSet, arg);
-								break;
-							} else {
-								break;
-							}
-						}
-					}
-				}
-				return nil;
-			};
-			
+			struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveSetter),char*));
+			void* setSelectorBlock;
+			switch (decoded->token[0].typeClass) {
+				case ObjcCharEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcIntEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(int, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcShortEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(short, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcLongEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(long, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcLLongEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(long long, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcUCharEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(unsigned char, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcUIntEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(unsigned int, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcUShortEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(unsigned short, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcULongEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(unsigned long, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcULLongEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(unsigned long long, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcFloatEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(float, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcDoubleEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(double, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcBoolEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(bool, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcVoidEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcStringEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcIdEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcClassEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(Class, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcSelEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(SEL, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcBitEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcPointerEncoding: {
+					setSelectorBlock = SDMObserverSetterBlock(Pointer, setObserve, instance, keyName);
+					break;
+				};
+				case ObjcStructEncoding: {
+					break;
+				};
+				case ObjcArrayEncoding: {
+					break;
+				};
+				default: {
+					break;
+				};
+			}
 			IMP setSelector = imp_implementationWithBlock(setSelectorBlock);
 
 			BOOL addObserverSetter = class_addMethod(class, observerSetSelector, setSelector, setMethodSignature);
@@ -308,11 +497,11 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 				method_exchangeImplementations(resolveSetter, observerSetter);
 				objc_setAssociatedObject(instance, originalMethods->setName, PtrCast(observerSetter,id), OBJC_ASSOCIATION_ASSIGN);
 			}
-			registerStatus = addObserverSetter;
+			registerSetStatus = addObserverSetter;
 			free(observerSetterName);
 		}
 		if (registerGetStatus) {
-			registerGetStatus = TRUE;
+			registerStatus = TRUE;
 		}
 	}
 	return registerStatus;
@@ -328,7 +517,6 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 			struct MethodNames *originalMethods = &(observers->array[i]);
 			char *observerKey = originalMethods->keyName;
 			if (strncmp(keyName, observerKey, strlen(keyName)) == 0x0) {
-				//objc_setAssociatedObject(instance, instance, nil, OBJC_ASSOCIATION_ASSIGN);
 				
 				id originalGetterValue = objc_getAssociatedObject(instance, originalMethods->getName);
 				Method observerGetterMethod = PtrCast(originalGetterValue,Method);
@@ -353,6 +541,8 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 					
 					objc_setAssociatedObject(instance, originalMethods->setName, nil, OBJC_ASSOCIATION_ASSIGN);
 				}
+				
+				// SDM: add keyName removal from associated object.
 			}
 		}
 	}
