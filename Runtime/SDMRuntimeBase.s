@@ -1,3 +1,4 @@
+// Created by: Gwynne Raskind, gwynne@darkrainfall.org
 // Only the x86_64 function is fully explained; the other versions only comment the arch-specific notes
 
 	.globl _SDMGenericGetSetInterceptor
