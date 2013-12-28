@@ -357,9 +357,15 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 					break;
 				};
 				case ObjcBitEncoding: {
+					SDMObserverGetterBlock(SDMcharBlock, char, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
 					
 				};
 				case ObjcPointerEncoding: {
+					SDMObserverGetterBlock(SDMpointerBlock, Pointer, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
 					
 				};
 				case ObjcStructEncoding: {
@@ -369,6 +375,9 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 					break;
 				};
 				default: {
+					SDMObserverGetterBlock(SDMidBlock, id, setObserve, instance, keyName);
+					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+					break;
 					break;
 				};
 			}
@@ -484,6 +493,7 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 					break;
 				};
 				default: {
+					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
 					break;
 				};
 			}

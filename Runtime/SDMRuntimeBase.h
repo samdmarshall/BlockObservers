@@ -37,6 +37,7 @@ typedef char* (^SDMstringBlock)(id self);
 typedef id (^SDMidBlock)(id self);
 typedef Class (^SDMclassBlock)(id self);
 typedef SEL (^SDMselBlock)(id self);
+typedef Pointer (^SDMpointerBlock)(id self);
 
 struct ObserverArray {
 	struct MethodNames *array;
