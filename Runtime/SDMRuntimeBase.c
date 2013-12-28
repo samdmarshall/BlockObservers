@@ -479,7 +479,7 @@ BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, Block
 					break;
 				};
 				case ObjcBitEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+					setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
 					break;
 				};
 				case ObjcPointerEncoding: {
