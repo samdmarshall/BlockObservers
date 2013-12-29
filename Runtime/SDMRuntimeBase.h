@@ -15,8 +15,8 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-#define ObserverGetBlock(ObserverName, ReturnType) ReturnType (^ObserverName)() = ^ReturnType()
-#define ObserverSetBlock(ObserverName, ArgumentType) void (^ObserverName)(ArgumentType) = ^(ArgumentType param)
+//#define ObserverGetSetBlock(ObserverName, ReturnType) void (^ObserverName)(ReturnType) = ^(ReturnType arg)
+#define ObserverGetSetBlock(ObserverName, ArgumentType) void (^ObserverName)(ArgumentType) = ^(ArgumentType arg)
 
 typedef void (^BlockPointer)();
 

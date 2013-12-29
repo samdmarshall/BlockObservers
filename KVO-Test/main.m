@@ -21,13 +21,12 @@
 int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		
-		ObserverGetBlock(getter, int){
-			printf("testing property get\n");
-			return 2;
+		ObserverGetSetBlock(getter, int){
+			printf("testing property get %i\n",arg);
 		};
 		
-		ObserverSetBlock(setter, int){
-			printf("testing property set\n");
+		ObserverGetSetBlock(setter, int){
+			printf("testing property set %i\n",arg);
 		};
 		
 		MyClass *testClass = [MyClass new];
@@ -35,7 +34,7 @@ int main(int argc, const char * argv[]) {
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
 		testClass.customInt = 5;
 		if (result) {
-			SDMRemoveCallbackForKeyInInstance("customInt", testClass);
+		//	SDMRemoveCallbackForKeyInInstance("customInt", testClass);
 		}
 		NSLog(@"%i",testClass.customIntWithNewGet);
 		MyClass *newTest = [MyClass new];
