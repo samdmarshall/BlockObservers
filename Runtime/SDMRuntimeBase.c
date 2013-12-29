@@ -426,11 +426,13 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 							
 						};
 						case ObjcStructEncoding: {
+							// SDM: broken, something maybe with the assembly breaking the stack?
 							SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
 							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
 							break;
 						};
 						case ObjcArrayEncoding: {
+							// SDM: should never happen
 							SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
 							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
 							break;
@@ -560,10 +562,12 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 							break;
 						};
 						case ObjcStructEncoding: {
+							// SDM: broken, something maybe with the assembly breaking the stack?
 							setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
 							break;
 						};
 						case ObjcArrayEncoding: {
+							// SDM: should never happen
 							setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
 							break;
 						};
@@ -627,8 +631,6 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 						Method originalGetter = class_getInstanceMethod(class, originalGetSelector);
 						
 						method_exchangeImplementations(observerGetterMethod, originalGetter);
-						
-						//objc_setAssociatedObject(instance, originalMethods->getName, nil, OBJC_ASSOCIATION_ASSIGN);
 					}
 					
 					id originalSetterValue = objc_getAssociatedObject(instance, originalMethods->setName);
@@ -644,12 +646,9 @@ void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance) {
 						Method originalSetter = class_getInstanceMethod(class, originalSetSelector);
 						
 						method_exchangeImplementations(observerSetterMethod, originalSetter);
-						
-						//objc_setAssociatedObject(instance, originalMethods->setName, nil, OBJC_ASSOCIATION_ASSIGN);
 					}
 					
 					originalMethods->isEnabled = NO;
-					// SDM: add keyName removal from associated object.
 				}
 			}
 		});
