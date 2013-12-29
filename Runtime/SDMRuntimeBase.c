@@ -29,17 +29,21 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 	__block SEL originalGet = nil; \
 	__block struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
 	if (observers && self == instance) { \
-		for (uint32_t i = 0x0; i < observers->count; i++) { \
-			char *key = observers->array[i].keyName; \
+		uint32_t index; \
+		for (index = 0x0; index < observers->count; index++) { \
+			char *key = observers->array[index].keyName; \
 			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
-				SEL realGetSelector = sel_registerName(observers->array[i].getName); \
-				Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
-				originalGet = method_getName(originalGetMethod); \
-				char *originalGetName = (char*)sel_getName(originalGet); \
-				if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) { \
-					getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
-					getObserve(instance, getValue); \
-				} \
+				break; \
+			} \
+		} \
+		if (index != observers->count) { \
+			SEL realGetSelector = sel_registerName(observers->array[index].getName); \
+			Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+			originalGet = method_getName(originalGetMethod); \
+			char *originalGetName = (char*)sel_getName(originalGet); \
+			if (strncmp(observers->array[index].getName, originalGetName, strlen(observers->array[index].getName)) == 0x0) { \
+				getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
+				getObserve(instance, getValue); \
 			} \
 		} \
 	} \
@@ -53,29 +57,32 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 	__block SEL originalSet = nil; \
 	__block struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
 	if (observers && self == instance) { \
-		for (uint32_t i = 0x0; i < observers->count; i++) { \
-			char *key = observers->array[i].keyName; \
+		uint32_t index; \
+		for (index = 0x0; index < observers->count; index++) { \
+			char *key = observers->array[index].keyName; \
 			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
-				SEL realSetSelector = sel_registerName(observers->array[i].setName); \
-				Method originalSetMethod = class_getInstanceMethod(class, realSetSelector); \
-				originalSet = method_getName(originalSetMethod); \
-				char *originalGetName = (char*)sel_getName(originalSet); \
-				if (strncmp(observers->array[i].setName, originalGetName, strlen(observers->array[i].setName)) == 0x0) { \
-					SEL realGetSelector = sel_registerName(observers->array[i].getName); \
-					Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
-					originalGet = method_getName(originalGetMethod); \
-					char *originalGetName = (char*)sel_getName(originalGet); \
-					if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) { \
-						getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
-						setObserve(instance, arg, getValue); \
-						SDMCreateSetter(ReturnType, self, originalSet, arg); \
-					} \
-				} \
 				break; \
 			} \
 		} \
+		if (index != observers->count) { \
+			SEL realSetSelector = sel_registerName(observers->array[index].setName); \
+			Method originalSetMethod = class_getInstanceMethod(class, realSetSelector); \
+			originalSet = method_getName(originalSetMethod); \
+			char *originalGetName = (char*)sel_getName(originalSet); \
+			if (strncmp(observers->array[index].setName, originalGetName, strlen(observers->array[index].setName)) == 0x0) { \
+				SEL realGetSelector = sel_registerName(observers->array[index].getName); \
+				Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+				originalGet = method_getName(originalGetMethod); \
+				char *originalGetName = (char*)sel_getName(originalGet); \
+				if (strncmp(observers->array[index].getName, originalGetName, strlen(observers->array[index].getName)) == 0x0) { \
+					getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
+					setObserve(instance, arg, getValue); \
+					SDMCreateSetter(ReturnType, self, originalSet, arg); \
+				} \
+			} \
+		} \
 	} \
-	return nil; \
+	return getValue; \
 }
 #pragma clang pop
 
