@@ -43,6 +43,7 @@
 		22E18F4A186E521E00E3FCF0 /* SDMObjcLexer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDMObjcLexer.h; sourceTree = "<group>"; };
 		22E18F51186F196900E3FCF0 /* Range.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Range.h; sourceTree = "<group>"; };
 		22E18F52186F19F000E3FCF0 /* Number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Number.h; sourceTree = "<group>"; };
+		22E18F531870B3DB00E3FCF0 /* SDMTypeRegister.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDMTypeRegister.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +122,7 @@
 				22657B4B186E15520094782E /* SDMRuntimeBase.s */,
 				22A9174F186CD79600087D0A /* SDMRuntimeBase.c */,
 				22A91750186CD79600087D0A /* SDMRuntimeBase.h */,
+				22E18F531870B3DB00E3FCF0 /* SDMTypeRegister.h */,
 			);
 			path = Runtime;
 			sourceTree = "<group>";

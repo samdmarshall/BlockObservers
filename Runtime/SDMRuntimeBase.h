@@ -10,33 +10,9 @@
 #define Daodan_SDMRuntimeBase_h
 
 #include "Core.h"
-#include <ctype.h>
-#include <objc/objc.h>
-#include <objc/message.h>
-#include <objc/runtime.h>
+#include "SDMTypeRegister.h"
 
 #define ObserverGetSetBlock(ObserverName, ArgumentType) void (^ObserverName)(id, ArgumentType, ArgumentType) = ^(id self, ArgumentType paramValue, ArgumentType originalValue)
-
-typedef void (^BlockPointer)();
-
-typedef char (^SDMcharBlock)(id self);
-typedef int (^SDMintBlock)(id self);
-typedef short (^SDMshortBlock)(id self);
-typedef long (^SDMlongBlock)(id self);
-typedef long long (^SDMlonglongBlock)(id self);
-typedef unsigned char (^SDMunsignedcharBlock)(id self);
-typedef unsigned int (^SDMunsignedintBlock)(id self);
-typedef unsigned short (^SDMunsignedshortBlock)(id self);
-typedef unsigned long (^SDMunsignedlongBlock)(id self);
-typedef unsigned long long (^SDMunsignedlonglongBlock)(id self);
-typedef float (^SDMfloatBlock)(id self);
-typedef double (^SDMdoubleBlock)(id self);
-typedef bool (^SDMboolBlock)(id self);
-typedef char* (^SDMstringBlock)(id self);
-typedef id (^SDMidBlock)(id self);
-typedef Class (^SDMclassBlock)(id self);
-typedef SEL (^SDMselBlock)(id self);
-typedef Pointer (^SDMpointerBlock)(id self);
 
 struct ObserverArray {
 	struct MethodNames *array;
@@ -47,6 +23,7 @@ struct MethodNames {
 	char *keyName;
 	char *getName;
 	char *setName;
+	BOOL isEnabled;
 };
 
 BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);

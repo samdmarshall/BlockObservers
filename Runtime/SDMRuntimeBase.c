@@ -21,9 +21,11 @@ typedef struct objc_method MethodStruct;
 #define SDMCreateGetter(ReturnType, obj, selector) ((ReturnType (*)(id, SEL))SDMGenericGetSetInterceptor)(obj, selector)
 #define SDMCreateSetter(ReturnType, obj, selector, setValue) ((void (*)(id, SEL, ReturnType))SDMGenericGetSetInterceptor)(obj, selector, setValue)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
 #define SDMObserverGetterBlock(BlockType, ReturnType, getObserve, instance, keyName) \
 BlockType getSelectorBlock = ^ReturnType(id self){ \
-	ReturnType getValue = 0x0; \
+	__block ReturnType getValue; \
 	SEL originalGet = nil; \
 	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
 	if (observers && self == instance) { \
@@ -46,7 +48,7 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 
 #define SDMObserverSetterBlock(ReturnType, setObserve, instance, keyName) \
 ^(id self, ReturnType arg){ \
-	ReturnType getValue = 0x0; \
+	__block ReturnType getValue; \
 	SEL originalGet = nil; \
 	SEL originalSet = nil; \
 	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
@@ -65,9 +67,9 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 					char *originalGetName = (char*)sel_getName(originalGet); \
 					if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) { \
 						getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
+						setObserve(instance, arg, getValue); \
+						SDMCreateSetter(ReturnType, self, originalSet, arg); \
 					} \
-					setObserve(instance, arg, getValue); \
-					SDMCreateSetter(ReturnType, self, originalSet, arg); \
 					break; \
 				} else { \
 					break; \
@@ -77,6 +79,7 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 	} \
 	return nil; \
 }
+#pragma clang pop
 
 BOOL SDMCanRegisterForIvarInClass(char *ivarName, Class class);
 BOOL SDMCanRegisterForPropertyInClass(char *propertyName, Class class);
@@ -281,117 +284,130 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 			char *getMethodSignature = SDMGenerateMethodSignature(resolveGetter);
 			
 			IMP getSelector;
-			struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveGetter),char*)); \
-			switch (decoded->token[0].typeClass) {
-				case ObjcCharEncoding: {
-					SDMObserverGetterBlock(SDMcharBlock, char, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcIntEncoding: {
-					SDMObserverGetterBlock(SDMintBlock, int, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcShortEncoding: {
-					SDMObserverGetterBlock(SDMshortBlock,short, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcLongEncoding: {
-					SDMObserverGetterBlock(SDMlongBlock, long, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcLLongEncoding: {
-					SDMObserverGetterBlock(SDMlonglongBlock, long long, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcUCharEncoding: {
-					SDMObserverGetterBlock(SDMunsignedcharBlock, unsigned char, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcUIntEncoding: {
-					SDMObserverGetterBlock(SDMunsignedintBlock, unsigned int, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcUShortEncoding: {
-					SDMObserverGetterBlock(SDMunsignedshortBlock, unsigned short, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcULongEncoding: {
-					SDMObserverGetterBlock(SDMunsignedlongBlock, unsigned long, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcULLongEncoding: {
-					SDMObserverGetterBlock(SDMunsignedlonglongBlock, unsigned long long, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcFloatEncoding: {
-					SDMObserverGetterBlock(SDMfloatBlock, float, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcDoubleEncoding: {
-					SDMObserverGetterBlock(SDMdoubleBlock, double, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcBoolEncoding: {
-					SDMObserverGetterBlock(SDMboolBlock, bool, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcStringEncoding: {
-					SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcIdEncoding: {
-					SDMObserverGetterBlock(SDMidBlock, id, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcClassEncoding: {
-					SDMObserverGetterBlock(SDMclassBlock, Class, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcSelEncoding: {
-					SDMObserverGetterBlock(SDMselBlock, SEL, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-				};
-				case ObjcBitEncoding: {
-					SDMObserverGetterBlock(SDMcharBlock, char, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-					
-				};
-				case ObjcPointerEncoding: {
-					SDMObserverGetterBlock(SDMpointerBlock, Pointer, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-					
-				};
-				case ObjcStructEncoding: {
-					break;
-				};
-				case ObjcArrayEncoding: {
-					break;
-				};
-				default: {
-					SDMObserverGetterBlock(SDMidBlock, id, getObserve, instance, keyName);
-					getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-					break;
-					break;
-				};
+			struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveGetter),char*));
+			if (decoded->token[0].pointerCount != 0x0) {
+				SDMObserverGetterBlock(SDMpointerBlock, Pointer, getObserve, instance, keyName);
+				getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+			} else {
+				switch (decoded->token[0].typeClass) {
+					case ObjcCharEncoding: {
+						SDMObserverGetterBlock(SDMcharBlock, char, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcIntEncoding: {
+						SDMObserverGetterBlock(SDMintBlock, int, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcShortEncoding: {
+						SDMObserverGetterBlock(SDMshortBlock,short, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcLongEncoding: {
+						SDMObserverGetterBlock(SDMlongBlock, long, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcLLongEncoding: {
+						SDMObserverGetterBlock(SDMlonglongBlock, long long, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcUCharEncoding: {
+						SDMObserverGetterBlock(SDMunsignedcharBlock, unsigned char, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcUIntEncoding: {
+						SDMObserverGetterBlock(SDMunsignedintBlock, unsigned int, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcUShortEncoding: {
+						SDMObserverGetterBlock(SDMunsignedshortBlock, unsigned short, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcULongEncoding: {
+						SDMObserverGetterBlock(SDMunsignedlongBlock, unsigned long, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcULLongEncoding: {
+						SDMObserverGetterBlock(SDMunsignedlonglongBlock, unsigned long long, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcFloatEncoding: {
+						SDMObserverGetterBlock(SDMfloatBlock, float, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcDoubleEncoding: {
+						SDMObserverGetterBlock(SDMdoubleBlock, double, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcBoolEncoding: {
+						SDMObserverGetterBlock(SDMboolBlock, bool, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcStringEncoding: {
+						SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcIdEncoding: {
+						SDMObserverGetterBlock(SDMidBlock, id, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcClassEncoding: {
+						SDMObserverGetterBlock(SDMclassBlock, Class, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcSelEncoding: {
+						SDMObserverGetterBlock(SDMselBlock, SEL, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+					case ObjcBitEncoding: {
+						SDMObserverGetterBlock(SDMcharBlock, char, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+						
+					};
+					case ObjcPointerEncoding: {
+						SDMObserverGetterBlock(SDMpointerBlock, Pointer, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+						
+					};
+					case ObjcStructEncoding: {
+						//uint64_t size = SDMSTObjcDecodeSizeOfType(&(decoded->token[0]));
+						//char *structBuffer = calloc(0x1, size);
+						//free(structBuffer);
+						SDMObserverGetterBlock(SDMMYSTRUCTBlock, MYSTRUCT, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+
+						break;
+					};
+					case ObjcArrayEncoding: {
+						uint64_t size = SDMSTObjcDecodeSizeOfType(&(decoded->token[0]));
+						char *arrayBuffer = calloc(0x1, size);
+						free(arrayBuffer);
+						break;
+					};
+					default: {
+						SDMObserverGetterBlock(SDMidBlock, id, getObserve, instance, keyName);
+						getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+						break;
+					};
+				}
 			}
 			
 			BOOL addObserverGetter = class_addMethod(class, observerGetSelector, getSelector, getMethodSignature);
@@ -417,98 +433,103 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 			
 			struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveSetter),char*));
 			void* setSelectorBlock;
-			switch (decoded->token[0].typeClass) {
-				case ObjcCharEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcIntEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(int, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcShortEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(short, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcLongEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(long, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcLLongEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(long long, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcUCharEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(unsigned char, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcUIntEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(unsigned int, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcUShortEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(unsigned short, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcULongEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(unsigned long, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcULLongEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(unsigned long long, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcFloatEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(float, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcDoubleEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(double, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcBoolEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(bool, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcVoidEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcStringEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcIdEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcClassEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(Class, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcSelEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(SEL, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcBitEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcPointerEncoding: {
-					setSelectorBlock = SDMObserverSetterBlock(Pointer, setObserve, instance, keyName);
-					break;
-				};
-				case ObjcStructEncoding: {
-					break;
-				};
-				case ObjcArrayEncoding: {
-					break;
-				};
-				default: {
-					setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
-					break;
-				};
+			if (decoded->token[0].pointerCount != 0x0) {
+				setSelectorBlock = SDMObserverSetterBlock(Pointer, setObserve, instance, keyName);
+			} else {
+				switch (decoded->token[0].typeClass) {
+					case ObjcCharEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcIntEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(int, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcShortEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(short, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcLongEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(long, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcLLongEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(long long, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcUCharEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(unsigned char, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcUIntEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(unsigned int, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcUShortEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(unsigned short, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcULongEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(unsigned long, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcULLongEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(unsigned long long, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcFloatEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(float, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcDoubleEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(double, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcBoolEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(bool, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcVoidEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcStringEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcIdEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcClassEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(Class, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcSelEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(SEL, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcBitEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcPointerEncoding: {
+						setSelectorBlock = SDMObserverSetterBlock(Pointer, setObserve, instance, keyName);
+						break;
+					};
+					case ObjcStructEncoding: {
+						break;
+					};
+					case ObjcArrayEncoding: {
+						break;
+					};
+					default: {
+						setSelectorBlock = SDMObserverSetterBlock(id, setObserve, instance, keyName);
+						break;
+					};
+				}
 			}
+			
 			IMP setSelector = imp_implementationWithBlock(setSelectorBlock);
 
 			BOOL addObserverSetter = class_addMethod(class, observerSetSelector, setSelector, setMethodSignature);
@@ -524,6 +545,7 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 		}
 		if (registerGetStatus) {
 			registerStatus = YES;
+			originalMethods->isEnabled = registerGetStatus;
 		}
 	}
 	return registerStatus;

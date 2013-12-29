@@ -442,4 +442,90 @@ struct SDMSTObjcType* SDMSTObjcDecodeType(char *type) {
 	return SDMSTObjcDecodeTypeWithLength(type, strlen(type));
 }
 
+uint64_t SDMSTObjcDecodeSizeOfType(struct SDMSTObjcLexerToken *token) {
+	uint64_t size = 0x0;
+	if (token && token->childrenCount) {
+		for (uint32_t i = 0x0; i < token->childrenCount; i++) {
+			size += SDMSTObjcDecodeSizeOfType(&(token->children[i]));
+		}
+	} else {
+		if (token->pointerCount) {
+			size += sizeof(Pointer);
+		} else {
+			switch (token->typeClass) {
+				case ObjcCharEncoding: {
+					size += sizeof(char);
+					break;
+				};
+				case ObjcIntEncoding: {
+					size += sizeof(int);
+					break;
+				};
+				case ObjcShortEncoding: {
+					size += sizeof(short);
+					break;
+				};
+				case ObjcLongEncoding: {
+					break;
+				};
+				case ObjcLLongEncoding: {
+					break;
+				};
+				case ObjcUCharEncoding: {
+					break;
+				};
+				case ObjcUIntEncoding: {
+					break;
+				};
+				case ObjcUShortEncoding: {
+					break;
+				};
+				case ObjcULongEncoding: {
+					break;
+				};
+				case ObjcULLongEncoding: {
+					break;
+				};
+				case ObjcFloatEncoding: {
+					break;
+				};
+				case ObjcDoubleEncoding: {
+					break;
+				};
+				case ObjcBoolEncoding: {
+					break;
+				};
+				case ObjcStringEncoding: {
+					break;
+				};
+				case ObjcIdEncoding: {
+					break;
+				};
+				case ObjcClassEncoding: {
+					break;
+				};
+				case ObjcSelEncoding: {
+					break;
+				};
+				case ObjcBitEncoding: {
+					break;
+				};
+				case ObjcPointerEncoding: {
+					break;
+				};
+				case ObjcStructEncoding: {
+					break;
+				};
+				case ObjcArrayEncoding: {
+					break;
+				};
+				default: {
+					break;
+				};
+			}
+		}
+	}
+	return size;
+}
+
 #endif

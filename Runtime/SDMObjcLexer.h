@@ -101,5 +101,6 @@ struct SDMSTObjcType* SDMSTObjcDecodeType(char *type);
 CoreRange SDMSTObjcGetTokenRangeFromOffset(char *type, uint64_t offset, char *token);
 char* SDMSTObjcPointersForToken(struct SDMSTObjcLexerToken *token);
 char* SDMSTObjcCreateMethodDescription(struct SDMSTObjcType *type, char *name);
+uint64_t SDMSTObjcDecodeSizeOfType(struct SDMSTObjcLexerToken *token);
 
 #endif
