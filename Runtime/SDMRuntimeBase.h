@@ -14,18 +14,6 @@
 
 #define ObserverGetSetBlock(ObserverName, ArgumentType) void (^ObserverName)(id, ArgumentType, ArgumentType) = ^(id self, ArgumentType paramValue, ArgumentType originalValue)
 
-struct ObserverArray {
-	struct MethodNames *array;
-	uint32_t count;
-};
-
-struct MethodNames {
-	char *keyName;
-	char *getName;
-	char *setName;
-	BOOL isEnabled;
-};
-
 BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
 
 void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance);

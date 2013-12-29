@@ -13,6 +13,27 @@
 #include <objc/objc.h>
 #include <objc/message.h>
 #include <objc/runtime.h>
+#include <dispatch/dispatch.h>
+
+#pragma mark -
+#pragma mark Internal Types
+
+struct ObserverArray {
+	dispatch_queue_t operationsQueue;
+	struct MethodNames *array;
+	uint32_t count;
+};
+
+struct MethodNames {
+	dispatch_queue_t keyQueue;
+	char *keyName;
+	char *getName;
+	char *setName;
+	BOOL isEnabled;
+};
+
+#pragma mark -
+#pragma mark Return Blocks
 
 typedef void (^BlockPointer)();
 
@@ -36,17 +57,5 @@ typedef SEL (^SDMselBlock)(id self);
 typedef Pointer (^SDMpointerBlock)(id self);
 
 #define SDMCreateBlockType(ReturnType) typedef ReturnType (^SDM##ReturnType##Block)(id self);
-
-#pragma mark -
-#pragma mark User Created Types
-
-struct teststruct {
-	char *name;
-	int number;
-} ATR_PACK;
-
-typedef struct teststruct MYSTRUCT;
-
-SDMCreateBlockType(MYSTRUCT);
 
 #endif
