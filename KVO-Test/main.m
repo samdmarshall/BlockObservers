@@ -42,17 +42,17 @@ int main(int argc, const char * argv[]) {
 		
 		MyClass *testClass = [MyClass new];
 		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
-		SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
+		//SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
 		
 		__block struct teststruct hello;
 		hello.name = "hello!";
 		hello.number = 8;
 		testClass.mystruct = hello;
-		
 		if (result) {
 			SDMRemoveCallbackForKeyInInstance("customName", testClass);
 		}
+		SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
 		NSLog(@"%@",testClass.customName);
 		MyClass *newTest = [MyClass new];
 		newTest.customName = @"bye!";
