@@ -50,9 +50,7 @@ struct MethodNames {
 	char *setName;
 };
 
-// SDM: always use this to hide the block pointer casts.
-#define SDMRegisterCallbacksForKeyInInstance(getObserve, setObserve, keyName, instance) SDMRegisterCallbacksForKeyInInstanceInternal((BlockPointer)getObserve, (BlockPointer)setObserve, keyName, instance)
-BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
+BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance);
 
 void SDMRemoveCallbackForKeyInInstance(char *keyName, id instance);
 

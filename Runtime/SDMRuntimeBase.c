@@ -191,7 +191,7 @@ IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd) {
 #pragma mark -
 #pragma mark Public Calls
 
-BOOL SDMRegisterCallbacksForKeyInInstanceInternal(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance) {
+BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer setObserve, char *keyName, id instance) {
 	BOOL registerStatus = NO;
 	BOOL registerGetStatus = NO;
 	BOOL registerSetStatus = NO;
