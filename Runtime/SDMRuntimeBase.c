@@ -12,6 +12,7 @@
 #include "SDMRuntimeBase.h"
 #include "SDMObjcLexer.h"
 
+// SDM: this exists because we need the size of `Method`
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 typedef struct objc_method MethodStruct;
@@ -45,6 +46,8 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 
 #define SDMObserverSetterBlock(ReturnType, setObserve, instance, keyName) \
 ^(id self, ReturnType arg){ \
+	ReturnType getValue = 0x0; \
+	SEL originalGet = nil; \
 	SEL originalSet = nil; \
 	struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
 	if (observers && self == instance) { \
@@ -56,7 +59,14 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 				originalSet = method_getName(originalSetMethod); \
 				char *originalGetName = (char*)sel_getName(originalSet); \
 				if (strncmp(observers->array[i].setName, originalGetName, strlen(observers->array[i].setName)) == 0x0) { \
-					setObserve(instance, arg); \
+					SEL realGetSelector = sel_registerName(observers->array[i].getName); \
+					Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+					originalGet = method_getName(originalGetMethod); \
+					char *originalGetName = (char*)sel_getName(originalGet); \
+					if (strncmp(observers->array[i].getName, originalGetName, strlen(observers->array[i].getName)) == 0x0) { \
+						getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
+					} \
+					setObserve(instance, arg, getValue); \
 					SDMCreateSetter(ReturnType, self, originalSet, arg); \
 					break; \
 				} else { \

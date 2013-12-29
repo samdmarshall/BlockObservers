@@ -15,7 +15,7 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-#define ObserverGetSetBlock(ObserverName, ArgumentType) void (^ObserverName)(id, ArgumentType) = ^(id self, ArgumentType arg)
+#define ObserverGetSetBlock(ObserverName, ArgumentType) void (^ObserverName)(id, ArgumentType, ArgumentType) = ^(id self, ArgumentType paramValue, ArgumentType originalValue)
 
 typedef void (^BlockPointer)();
 

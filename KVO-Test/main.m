@@ -22,11 +22,11 @@ int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		
 		ObserverGetSetBlock(getter, int){
-			printf("testing property get %i\n",arg);
+			printf("testing property get %i\n",paramValue);
 		};
 		
 		ObserverGetSetBlock(setter, int){
-			printf("testing property set %i\n",arg);
+			printf("testing property set from %i to %i\n",originalValue,paramValue);
 		};
 		
 		MyClass *testClass = [MyClass new];
