@@ -29,9 +29,9 @@ L._SDMGenericGetSetInterceptor_do:
 
 	// this function receives arg0 (self) and arg1 (_cmd) and MUST fire any notifications
 	// AND return the IMP pointer for the original getter or setter
-	//cmp $1, %r10 // are we in stret mode?
-	//cmove %rsi, %rdi // if so, shift self up one
-	//cmove %rdx, %rsi // and also shift _cmd up one
+	cmp $1, %r10 // are we in stret mode?
+	cmove %rsi, %rdi // if so, shift self up one
+	cmove %rdx, %rsi // and also shift _cmd up one
 	call _SDMFireGetterSetterNotificationsAndReturnIMP
 
 	fxrstor (%rsp) // restore the full x87/MMX/SSE state

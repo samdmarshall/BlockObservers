@@ -493,15 +493,14 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 							
 						};
 						case ObjcStructEncoding: {
-							// SDM: broken, something maybe with the assembly breaking the stack?
-							SDMObserverGetterBlock_stret(SDMstringBlock, char*, getObserve, instance, keyName);
-							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
-							break;
-						};
-						case ObjcArrayEncoding: {
-							// SDM: should never happen
-							SDMObserverGetterBlock_stret(SDMstringBlock, char*, getObserve, instance, keyName);
-							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+							uint64_t size = SDMSTObjcDecodeSizeOfType(&(decoded->token[0]));
+							if (size <= sizeof(uintptr_t)*2) {
+								SDMObserverGetterBlock(SDMMYSTRUCTBlock, MYSTRUCT, getObserve, instance, keyName);
+								getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+							} else {
+								SDMObserverGetterBlock_stret(SDMMYSTRUCTBlock, MYSTRUCT, getObserve, instance, keyName);
+								getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
+							}
 							break;
 						};
 						default: {
@@ -630,12 +629,12 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 						};
 						case ObjcStructEncoding: {
 							// SDM: broken, something maybe with the assembly breaking the stack?
-							setSelectorBlock = SDMObserverSetterBlock_stret(SDMMYSTRUCTBlock, setObserve, instance, keyName);
-							break;
-						};
-						case ObjcArrayEncoding: {
-							// SDM: should never happen
-							setSelectorBlock = SDMObserverSetterBlock_stret(char*, setObserve, instance, keyName);
+							uint64_t size = SDMSTObjcDecodeSizeOfType(&(decoded->token[decoded->tokenCount-0x1]));
+							if (size <= sizeof(uintptr_t)*2) {
+								setSelectorBlock = SDMObserverSetterBlock(SDMMYSTRUCTBlock, setObserve, instance, keyName);
+							} else {
+								setSelectorBlock = SDMObserverSetterBlock_stret(SDMMYSTRUCTBlock, setObserve, instance, keyName);
+							}
 							break;
 						};
 						default: {
