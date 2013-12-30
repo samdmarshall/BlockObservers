@@ -456,7 +456,7 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 							break;
 						};
 						case ObjcBoolEncoding: {
-							SDMObserverGetterBlock(SDMboolBlock, bool, getObserve, instance, keyName);
+							SDMObserverGetterBlock(SDMboolBlock, BOOL, getObserve, instance, keyName);
 							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
 							break;
 						};

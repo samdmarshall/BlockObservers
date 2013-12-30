@@ -49,7 +49,7 @@ typedef unsigned long (^SDMunsignedlongBlock)(id self);
 typedef unsigned long long (^SDMunsignedlonglongBlock)(id self);
 typedef float (^SDMfloatBlock)(id self);
 typedef double (^SDMdoubleBlock)(id self);
-typedef bool (^SDMboolBlock)(id self);
+typedef BOOL (^SDMboolBlock)(id self);
 typedef char* (^SDMstringBlock)(id self);
 typedef id (^SDMidBlock)(id self);
 typedef Class (^SDMclassBlock)(id self);
