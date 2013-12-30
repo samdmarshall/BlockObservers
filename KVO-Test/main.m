@@ -9,14 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "SDMRuntimeBase.h"
 
-
-struct teststruct {
-	char *name;
-	int number;
-} ATR_PACK;
-
-typedef struct teststruct MYSTRUCT;
-
 @interface MyClass : NSObject
 @property (nonatomic, strong) NSString *customName;
 @property (getter = customIntWithNewGet, readwrite) int customInt;
@@ -32,16 +24,16 @@ typedef struct teststruct MYSTRUCT;
 int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		
-		ObserverGetSetBlock(getter, NSString*){
-			NSLog(@"testing property get %@",paramValue);
+		ObserverGetSetBlock(getter, MYSTRUCT){
+			NSLog(@"testing property get %i",paramValue.number);
 		};
 		
-		ObserverGetSetBlock(setter, NSString*){
-			NSLog(@"testing property set from %@ to %@",originalValue,paramValue);
+		ObserverGetSetBlock(setter, MYSTRUCT){
+			NSLog(@"testing property set from %i to %i",originalValue.number,paramValue.number);
 		};
 		
 		MyClass *testClass = [MyClass new];
-		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
+		BOOL result = SDMRegisterCallbacksForKeyInInstance(getter, setter, "mystruct", testClass);
 
 		[testClass performSelector:@selector(setCustomName:) withObject:@"hi!"];
 		
@@ -51,12 +43,12 @@ int main(int argc, const char * argv[]) {
 		testClass.mystruct = hello;
 		
 		if (result) {
-			SDMRemoveCallbackForKeyInInstance("customName", testClass);
+			SDMRemoveCallbackForKeyInInstance("mystruct", testClass);
 		}
 		
 		NSLog(@"%@",testClass.customName);
 		
-		SDMRegisterCallbacksForKeyInInstance(getter, setter, "customName", testClass);
+		//SDMRegisterCallbacksForKeyInInstance(getter, setter, "mystruct", testClass);
 		
 		testClass.customName = @"hello world!";
 		NSLog(@"%@",testClass.customName);

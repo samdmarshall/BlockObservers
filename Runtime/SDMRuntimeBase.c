@@ -12,17 +12,53 @@
 #include "SDMRuntimeBase.h"
 #include "SDMObjcLexer.h"
 
+// SDM: SDMRuntimeBase.s calls
+extern void SDMGenericGetSetInterceptor_stret(void);
+extern void SDMGenericGetSetInterceptor(void);
+
 // SDM: this exists because we need the size of `Method`
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 typedef struct objc_method MethodStruct;
 #pragma clang diagnostic pop
 
+#define SDMCreateGetter_stret(ReturnType, obj, selector) ((ReturnType (*)(id, SEL))SDMGenericGetSetInterceptor_stret	)(obj, selector)
 #define SDMCreateGetter(ReturnType, obj, selector) ((ReturnType (*)(id, SEL))SDMGenericGetSetInterceptor)(obj, selector)
+
+#define SDMCreateSetter_stret(ReturnType, obj, selector, setValue) ((void (*)(id, SEL, ReturnType))SDMGenericGetSetInterceptor_stret)(obj, selector, setValue)
 #define SDMCreateSetter(ReturnType, obj, selector, setValue) ((void (*)(id, SEL, ReturnType))SDMGenericGetSetInterceptor)(obj, selector, setValue)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
+
+#define SDMObserverGetterBlock_stret(BlockType, ReturnType, getObserve, instance, keyName) \
+BlockType getSelectorBlock = ^ReturnType(id self){ \
+	__block ReturnType getValue; \
+	__block SEL originalGet = nil; \
+	__block struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
+	if (observers && self == instance) { \
+		uint32_t index; \
+		for (index = 0x0; index < observers->count; index++) { \
+			char *key = observers->array[index].keyName; \
+			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
+				break; \
+			} \
+		} \
+		if (index != observers->count) { \
+			SEL realGetSelector = sel_registerName(observers->array[index].getName); \
+			Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+			originalGet = method_getName(originalGetMethod); \
+			char *originalGetName = (char*)sel_getName(originalGet); \
+			if (strncmp(observers->array[index].getName, originalGetName, strlen(observers->array[index].getName)) == 0x0) { \
+				getValue = (ReturnType)SDMCreateGetter_stret(ReturnType, self, originalGet); \
+				getObserve(instance, getValue); \
+			} \
+		} \
+	} \
+	return getValue; \
+}
+
+
 #define SDMObserverGetterBlock(BlockType, ReturnType, getObserve, instance, keyName) \
 BlockType getSelectorBlock = ^ReturnType(id self){ \
 	__block ReturnType getValue; \
@@ -44,6 +80,41 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 			if (strncmp(observers->array[index].getName, originalGetName, strlen(observers->array[index].getName)) == 0x0) { \
 				getValue = (ReturnType)SDMCreateGetter(ReturnType, self, originalGet); \
 				getObserve(instance, getValue); \
+			} \
+		} \
+	} \
+	return getValue; \
+}
+
+#define SDMObserverSetterBlock_stret(ReturnType, setObserve, instance, keyName) \
+^(id self, ReturnType arg){ \
+	__block ReturnType getValue; \
+	__block SEL originalGet = nil; \
+	__block SEL originalSet = nil; \
+	__block struct ObserverArray *observers = (struct ObserverArray *)objc_getAssociatedObject(self, instance); \
+	if (observers && self == instance) { \
+		uint32_t index; \
+		for (index = 0x0; index < observers->count; index++) { \
+			char *key = observers->array[index].keyName; \
+			if (strncmp(keyName, key, strlen(keyName)) == 0x0) { \
+				break; \
+			} \
+		} \
+		if (index != observers->count) { \
+			SEL realSetSelector = sel_registerName(observers->array[index].setName); \
+			Method originalSetMethod = class_getInstanceMethod(class, realSetSelector); \
+			originalSet = method_getName(originalSetMethod); \
+			char *originalGetName = (char*)sel_getName(originalSet); \
+			if (strncmp(observers->array[index].setName, originalGetName, strlen(observers->array[index].setName)) == 0x0) { \
+				SEL realGetSelector = sel_registerName(observers->array[index].getName); \
+				Method originalGetMethod = class_getInstanceMethod(class, realGetSelector); \
+				originalGet = method_getName(originalGetMethod); \
+				char *originalGetName = (char*)sel_getName(originalGet); \
+				if (strncmp(observers->array[index].getName, originalGetName, strlen(observers->array[index].getName)) == 0x0) { \
+					getValue = (ReturnType)SDMCreateGetter_stret(ReturnType, self, originalGet); \
+					setObserve(instance, arg, getValue); \
+					SDMCreateSetter_stret(ReturnType, self, originalSet, arg); \
+				} \
 			} \
 		} \
 	} \
@@ -90,10 +161,6 @@ BOOL SDMCanRegisterForIvarInClass(char *ivarName, Class class);
 BOOL SDMCanRegisterForPropertyInClass(char *propertyName, Class class);
 
 extern IMP SDMFireGetterSetterNotificationsAndReturnIMP(id self, SEL _cmd);
-
-// SDM: SDMRuntimeBase.s calls
-extern void SDMGenericGetSetInterceptor_stret(void);
-extern void SDMGenericGetSetInterceptor(void);
 
 #pragma mark -
 #pragma mark Private Calls
@@ -427,13 +494,13 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 						};
 						case ObjcStructEncoding: {
 							// SDM: broken, something maybe with the assembly breaking the stack?
-							SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
+							SDMObserverGetterBlock_stret(SDMstringBlock, char*, getObserve, instance, keyName);
 							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
 							break;
 						};
 						case ObjcArrayEncoding: {
 							// SDM: should never happen
-							SDMObserverGetterBlock(SDMstringBlock, char*, getObserve, instance, keyName);
+							SDMObserverGetterBlock_stret(SDMstringBlock, char*, getObserve, instance, keyName);
 							getSelector = imp_implementationWithBlock(PtrCast(getSelectorBlock,id));
 							break;
 						};
@@ -477,10 +544,10 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 				
 				struct SDMSTObjcType *decoded = SDMSTObjcDecodeType(PtrCast(method_getTypeEncoding(resolveSetter),char*));
 				void* setSelectorBlock;
-				if (decoded->token[0].pointerCount != 0x0) {
+				if (decoded->token[decoded->tokenCount-0x1].pointerCount != 0x0) {
 					setSelectorBlock = SDMObserverSetterBlock(Pointer, setObserve, instance, keyName);
 				} else {
-					switch (decoded->token[0].typeClass) {
+					switch (decoded->token[decoded->tokenCount-0x1].typeClass) {
 						case ObjcCharEncoding: {
 							setSelectorBlock = SDMObserverSetterBlock(char, setObserve, instance, keyName);
 							break;
@@ -563,12 +630,12 @@ BOOL SDMRegisterCallbacksForKeyInInstance(BlockPointer getObserve, BlockPointer 
 						};
 						case ObjcStructEncoding: {
 							// SDM: broken, something maybe with the assembly breaking the stack?
-							setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
+							setSelectorBlock = SDMObserverSetterBlock_stret(SDMMYSTRUCTBlock, setObserve, instance, keyName);
 							break;
 						};
 						case ObjcArrayEncoding: {
 							// SDM: should never happen
-							setSelectorBlock = SDMObserverSetterBlock(char*, setObserve, instance, keyName);
+							setSelectorBlock = SDMObserverSetterBlock_stret(char*, setObserve, instance, keyName);
 							break;
 						};
 						default: {

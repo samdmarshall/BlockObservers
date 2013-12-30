@@ -56,6 +56,15 @@ typedef Class (^SDMclassBlock)(id self);
 typedef SEL (^SDMselBlock)(id self);
 typedef Pointer (^SDMpointerBlock)(id self);
 
-#define SDMCreateBlockType(ReturnType) typedef ReturnType (^SDM##ReturnType##Block)(id self);
+#define SDMCreateBlockType(ReturnType) typedef ReturnType (^SDM##ReturnType##Block)(id self)
+
+struct teststruct {
+	char *name;
+	int number;
+} ATR_PACK;
+
+typedef struct teststruct MYSTRUCT;
+
+SDMCreateBlockType(MYSTRUCT);
 
 #endif
