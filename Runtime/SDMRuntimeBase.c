@@ -105,8 +105,8 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 			originalSet = method_getName(originalSetMethod); \
 			char *originalSetName = (char*)sel_getName(originalSet); \
 			if (strncmp(observers->array[index].setName, originalSetName, strlen(observers->array[index].setName)) == 0x0) { \
-				setObserve(instance, arg, getValue); \
 				SDMCreateSetter_stret(ReturnType, self, originalSet, arg); \
+				setObserve(instance, arg); \
 			} \
 		} \
 	} \
@@ -133,8 +133,8 @@ BlockType getSelectorBlock = ^ReturnType(id self){ \
 			originalSet = method_getName(originalSetMethod); \
 			char *originalSetName = (char*)sel_getName(originalSet); \
 			if (strncmp(observers->array[index].setName, originalSetName, strlen(observers->array[index].setName)) == 0x0) { \
-				setObserve(instance, arg, getValue); \
 				SDMCreateSetter(ReturnType, self, originalSet, arg); \
+				setObserve(instance, arg); \
 			} \
 		} \
 	} \
